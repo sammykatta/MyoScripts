@@ -63,6 +63,10 @@ function unlock()
     extendUnlock()
 end
 
+function relock()
+	unlocked = false
+end
+
 function extendUnlock()
     unlockedSince = myo.getTimeMilliseconds()
 end
@@ -84,6 +88,14 @@ function onPoseEdge(pose, edge)
         end
     end
 
+	-- Play and pause
+	if pose == "fingersSpread" then
+		if unlocked and edge == "on" then
+			playPause()
+			relock()
+		end
+	end
+	
     -- Forward/backward and shuttle.
     if pose == "waveIn" or pose == "waveOut" then
         local now = myo.getTimeMilliseconds()
@@ -113,6 +125,7 @@ function onPoseEdge(pose, edge)
 	if pose == "fist" then
 		local now = myo.getTimeMilliseconds()
 		yawStart = myo.getYaw()
+		-- myo.debug("Start Position: " .. yawStart)
 		
 		if unlocked and edge == "on" then
 			-- Set up volume control behaviour. Start with the longer timeout for 
@@ -122,8 +135,10 @@ function onPoseEdge(pose, edge)
             extendUnlock()
 		end
 		
+		-- If we're no longer holding the fist, stop changing volume
 		if edge == "off" then
 			volTimeout = nil
+			relock()
 		end
 		
 	end
@@ -145,18 +160,20 @@ function onPeriodic()
     local now = myo.getTimeMilliseconds()
 	local yawNow = myo.getYaw()
 	
-    -- Shuttle behaviour
+	
+    -- Volume change behaviour
     if volTimeout then
         extendUnlock()
 
-        -- If we haven't done a shuttle burst since the timeout, do one now
+        -- If we haven't done a volume burst since the timeout, do one now
         if (now - volSince) > volTimeout then
+			-- myo.debug("Current yaw: " .. yawNow-yawStart)
             --  Check if user has rotated their arm since making the fist, 
 			-- and assign volume direction based on direction of rotation.
-				if yawNow - yawStart > 1 then
+				if yawNow - yawStart < -0.1 then
 					volDirection = "up"
 					volBurst()
-				elseif yawNow - yawStart < -1 then
+				elseif yawNow - yawStart > 0.1 then
 					volDirection = "down"
 					volBurst()
 				end
@@ -164,7 +181,7 @@ function onPeriodic()
             -- Update the timeout. (The first time it will be the longer delay.)
             volTimeout = VOL_CONTROL_PERIOD
 
-            -- Update when we did the last shuttle burst
+            -- Update when we did the last volume burst
             volSince = now
         end
     end
