@@ -1,4 +1,14 @@
-scriptId = 'com.sammy.scripts.spotifycontrol'
+scriptId = 'com.curiousg.scripts.spotifycontrol'
+
+-- This script is based off the powerpoint presentation sample script offered by Thalmic.
+
+-- Currently only works on Windows because I don't have a Mac to test it on.
+
+-- Use this to control Spotify/mimic Spotify keyboard shortcuts:
+-- Unlock myo gestures: thumb to pinky
+-- Play/pause = spread hand
+-- Previous/next song = wave left or right
+-- Volume up/down = make a fist and rotate it left or right
 
 -- Effects
 
@@ -91,12 +101,13 @@ function onPoseEdge(pose, edge)
 	-- Play and pause
 	if pose == "fingersSpread" then
 		if unlocked and edge == "on" then
+			myo.vibrate("short")
 			playPause()
 			relock()
 		end
 	end
 	
-    -- Forward/backward and shuttle.
+    -- Forward/backward.
     if pose == "waveIn" or pose == "waveOut" then
         local now = myo.getTimeMilliseconds()
 
@@ -116,10 +127,7 @@ function onPoseEdge(pose, edge)
             shuttleBurst()
 
         end
-        -- If we're no longer making wave in or wave out, stop shuttle behaviour.
-        if edge == "off" then
-            shuttleTimeout = nil
-        end
+
     end
 	
 	if pose == "fist" then
@@ -128,16 +136,17 @@ function onPoseEdge(pose, edge)
 		-- myo.debug("Start Position: " .. yawStart)
 		
 		if unlocked and edge == "on" then
-			-- Set up volume control behaviour. Start with the longer timeout for 
-            -- the initial delay.
+			-- Set up volume control behaviour.
             volSince = now
-            volTimeout = VOL_CONTROL_TIMEOUT
+            volTimeout = VOL_CONTROL_PERIOD
             extendUnlock()
 		end
 		
 		-- If we're no longer holding the fist, stop changing volume
 		if edge == "off" then
 			volTimeout = nil
+			-- Lock the device again because fist off is often detected as spread on, and 
+			-- you don't want to play/pause every time you finish changing the volume.
 			relock()
 		end
 		
@@ -148,13 +157,11 @@ end
 -- All timeouts in milliseconds.
 
 -- Time since last activity before we lock
-UNLOCKED_TIMEOUT = 2200
+UNLOCKED_TIMEOUT = 2500
 
--- Delay when holding wave left/right before switching to shuttle behaviour
-VOL_CONTROL_TIMEOUT = 600
+-- Delay between volume control steps
+VOL_CONTROL_PERIOD = 250
 
--- How often to trigger shuttle behaviour
-VOL_CONTROL_PERIOD = 300
 
 function onPeriodic()
     local now = myo.getTimeMilliseconds()
@@ -167,8 +174,8 @@ function onPeriodic()
 
         -- If we haven't done a volume burst since the timeout, do one now
         if (now - volSince) > volTimeout then
-			-- myo.debug("Current yaw: " .. yawNow-yawStart)
-            --  Check if user has rotated their arm since making the fist, 
+				-- myo.debug("Current yaw: " .. yawNow-yawStart)
+            -- Check if user has rotated their arm since making the fist, 
 			-- and assign volume direction based on direction of rotation.
 				if yawNow - yawStart < -0.1 then
 					volDirection = "up"
@@ -177,9 +184,6 @@ function onPeriodic()
 					volDirection = "down"
 					volBurst()
 				end
-
-            -- Update the timeout. (The first time it will be the longer delay.)
-            volTimeout = VOL_CONTROL_PERIOD
 
             -- Update when we did the last volume burst
             volSince = now
