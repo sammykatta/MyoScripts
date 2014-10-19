@@ -32,15 +32,6 @@ function volumeDown()
 	myo.keyboard("down_arrow", "press", "control")
 end
 
--- Burst forward or backward depending on the value of shuttleDirection.
-function shuttleBurst()
-    if shuttleDirection == "forward" then
-        forward()
-    elseif shuttleDirection == "backward" then
-        backward()
-    end
-end
-
 -- Turn volume one notch up or down depending on value of volDirection.
 function volBurst()
 	if volDirection == "up" then
@@ -103,7 +94,7 @@ function onPoseEdge(pose, edge)
 		if unlocked and edge == "on" then
 			myo.vibrate("short")
 			playPause()
-			relock()
+			--relock()
 		end
 	end
 	
@@ -115,16 +106,15 @@ function onPoseEdge(pose, edge)
             -- Deal with direction and arm.
             pose = conditionallySwapWave(pose)
 
-            -- Determine direction based on the pose.
+            -- Skip forward or back depending on pose direction.
             if pose == "waveIn" then
-                shuttleDirection = "backward"
+                backward()
             else
-                shuttleDirection = "forward"
+                forward()
             end
 
             -- Initial burst and vibrate
             myo.vibrate("short")
-            shuttleBurst()
 
         end
 
@@ -133,7 +123,7 @@ function onPoseEdge(pose, edge)
 	if pose == "fist" then
 		local now = myo.getTimeMilliseconds()
 		yawStart = myo.getYaw()
-		-- myo.debug("Start Position: " .. yawStart)
+		myo.debug("Start Position: " .. yawStart)
 		
 		if unlocked and edge == "on" then
 			-- Set up volume control behaviour.
@@ -147,7 +137,7 @@ function onPoseEdge(pose, edge)
 			volTimeout = nil
 			-- Lock the device again because fist off is often detected as spread on, and 
 			-- you don't want to play/pause every time you finish changing the volume.
-			relock()
+			--relock()
 		end
 		
 	end
@@ -174,7 +164,7 @@ function onPeriodic()
 
         -- If we haven't done a volume burst since the timeout, do one now
         if (now - volSince) > volTimeout then
-				-- myo.debug("Current yaw: " .. yawNow-yawStart)
+				myo.debug("Current yaw: " .. yawNow-yawStart)
             -- Check if user has rotated their arm since making the fist, 
 			-- and assign volume direction based on direction of rotation.
 				if yawNow - yawStart < -0.1 then
