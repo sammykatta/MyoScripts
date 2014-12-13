@@ -76,7 +76,7 @@ end
 
 function onPoseEdge(pose, edge)
     -- Unlock
-    if pose == "thumbToPinky" then
+    if pose == "doubleTap" then
         if edge == "off" then
             -- Unlock when pose is released in case the user holds it for a while.
             unlock()
@@ -100,7 +100,7 @@ function onPoseEdge(pose, edge)
 	
     -- Forward/backward.
     if pose == "waveIn" or pose == "waveOut" then
-        local now = myo.getTimeMilliseconds()
+        --local now = myo.getTimeMilliseconds()
 
         if unlocked and edge == "on" then
             -- Deal with direction and arm.
@@ -115,6 +115,7 @@ function onPoseEdge(pose, edge)
 
             -- Initial burst and vibrate
             myo.vibrate("short")
+			extendUnlock()
 
         end
 
@@ -147,7 +148,7 @@ end
 -- All timeouts in milliseconds.
 
 -- Time since last activity before we lock
-UNLOCKED_TIMEOUT = 2500
+UNLOCKED_TIMEOUT = 5000
 
 -- Delay between volume control steps
 VOL_CONTROL_PERIOD = 250

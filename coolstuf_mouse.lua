@@ -45,7 +45,7 @@ end
 function onPoseEdge(pose, edge)
 
 -- Unlock
-    	if pose == "thumbToPinky" then
+    	if pose == "doubleTap" then
 		if unlocked == false then
   	    		if edge == "off" then
     	        		unlock()

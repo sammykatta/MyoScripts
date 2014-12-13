@@ -1,10 +1,10 @@
 scriptId = 'com.curiousg.scripts.betterppt'
 
 -- Progress: 
--- Command mode/mode switching set up, but exiting pen/arrow/command mode doesn't
-	-- work consistently (though arrow exit works better than the others).
--- Disabling mouse control is hit or miss, mostly miss.
--- Left click down for drawing when in pen mode doesn't work for some reason.
+-- Command mode/mode switching set up, and entering pen/arrow modes works well.
+-- Exiting pen/arrow/command mode doesn't (though arrow exit works better than the others).
+-- Disabling mouse control is hit or miss, mostly miss except when done during relock.
+-- Left click down for drawing when in pen mode also doesn't work.
 -- Have yet to test erase/hide ink because I haven't gotten it to draw yet.
 -- Need to add check for Mac vs. PC for relevant keyboard functions.
 
@@ -88,7 +88,7 @@ end
 
 -- Unlock mechanism 
 
-function unlock()
+function onUnlock()
     unlocked = true
     extendUnlock()
 end
@@ -107,7 +107,7 @@ end
 function onPoseEdge(pose, edge)
 
 -- Unlock and relock
-    if pose == "thumbToPinky" then
+    if pose == "doubleTap" then
 		if not unlocked then
 			if edge == "off" then
 				-- Unlock when pose is released in case the user holds it for a while.
